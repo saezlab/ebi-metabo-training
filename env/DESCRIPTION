@@ -1,0 +1,27 @@
+Package: metabo2026env
+Title: R dependencies for EMBL-EBI 2026 metabolomics training
+Version: 0.1.0
+License: BSD_3_clause + file LICENSE
+Description: Not a real package; a fake DESCRIPTION used as a manifest by
+    pak::local_install_dev_deps() so the R toolchain can resolve the
+    training's R dependencies in one go. Use env/install.R as the
+    primary entry point.
+Imports:
+    OmnipathR (>= 3.99.0),
+    MetaProViz (>= 3.99.40),
+    SummarizedExperiment,
+    dplyr,
+    tidyr,
+    tibble,
+    purrr,
+    readr,
+    stringr,
+    ggplot2,
+    ggraph,
+    igraph,
+    IRkernel,
+    BiocManager
+Remotes:
+    saezlab/OmnipathR,
+    saezlab/MetaProViz
+Encoding: UTF-8

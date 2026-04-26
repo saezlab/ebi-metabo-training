@@ -1,0 +1,45 @@
+# Results / generated artifacts
+results/
+*.png
+*.svg
+*.pdf
+!docs/figures/*.png
+!docs/figures/*.svg
+!docs/figures/*.pdf
+
+# R
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+*.Rcheck/
+**/MetaProViz_Results/
+**/metaproviz-log/
+**/MetaProViz_log/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.uv/
+*.egg-info/
+build/
+dist/
+
+# Jupyter
+.ipynb_checkpoints/
+*.nbconvert.ipynb
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Cached downloads (OmnipathR / omnipath-metabo / dlmachine)
+.cache/
+**/*.cache/
+*.tar.gz
+*.tar.zst
+!env/*.lock

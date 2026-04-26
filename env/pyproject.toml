@@ -1,0 +1,33 @@
+[project]
+name = "metabo2026"
+version = "0.1.0"
+description = "EMBL-EBI 2026 metabolomics training materials"
+readme = "../README.md"
+license = "BSD-3-Clause"
+requires-python = ">=3.12,<3.13"
+
+dependencies = [
+    "omnipath-client[pandas,polars] @ git+https://github.com/saezlab/omnipath-client@main",
+    "omnipath-metabo @ git+https://github.com/saezlab/omnipath-metabo@main",
+    "pandas>=2.2",
+    "polars>=1.0",
+    "pyarrow>=15.0",
+    "matplotlib>=3.8",
+    "networkx>=3.2",
+    "ipykernel>=6.29",
+    "jupyterlab>=4.2",
+    "jupytext>=1.16",
+    "nbconvert>=7.16",
+]
+
+[project.optional-dependencies]
+graph = ["annnet"]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[tool.uv]
+# When stable tags appear, switch the git deps above from @main to @vX.Y.Z.
+# `uv.lock` will pin to a specific commit either way.
+
+[tool.jupytext.formats]
+"../scripts/R/" = "R:percent"
+"../notebooks/" = "ipynb"
