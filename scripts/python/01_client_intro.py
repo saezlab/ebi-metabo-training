@@ -23,37 +23,38 @@ list(endpoints)[:10]
 # ## Discover the parameters of one endpoint
 
 # %%
-oc.params("interactions")
+list(oc.params("interactions"))[:15]
 
 # %%
-oc.values("interactions", "resources")[:20]
+# `oc.values(endpoint, param)` returns a list when the parameter has an
+# enumerable set of allowed values, or `None` for free-form params (e.g.
+# `resources` accepts any string). Try a few:
+for param in ("organisms", "directed", "resources"):
+    vals = oc.values("interactions", param)
+    print(f"{param:10s} -> {vals if vals is None else vals[:8]}")
 
 # %% [markdown]
-# ## Fetch a small slice of interactions
+# ## Fetch interactions
 #
-# Default return is a polars DataFrame; you can ask for pandas or pyarrow
-# via the client constructor.
+# The new OmniPath API serves the full dataset (~2.5M rows) as one
+# Parquet file; filtering happens client-side. Default return is a polars
+# DataFrame.
 
 # %%
-df = oc.interactions(
-    resources=["SignaLink3", "SIGNOR"],
-    organisms=[9606],
-)
-df.head()
-
-# %%
+df = oc.interactions()
 print(f"{df.height} rows × {df.width} columns")
 df.columns
 
+# %%
+df.head()
+
 # %% [markdown]
-# ## Pandas backend
-#
-# Construct a client explicitly when you want a different backend.
+# ## Filter client-side with polars
 
 # %%
-client = oc.OmniPath(backend="pandas")
-df_pd = client.interactions(resources=["SignaLink3"], organisms=[9606])
-type(df_pd), df_pd.shape
+import polars as pl
+
+df.filter(pl.col("evidence_count") >= 5).head()
 
 # %% [markdown]
 # ## Search the ontology terms

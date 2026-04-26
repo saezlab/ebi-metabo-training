@@ -15,9 +15,14 @@ from omnipath_client import utils
 
 # %% [markdown]
 # ## Available ID types
+#
+# `id_types()` returns a list of `{name, label, entity_type, curie_prefix}`
+# dicts covering proteins, small molecules, genes, etc.
 
 # %%
-utils.id_types("uniprot")[:10]
+all_types = utils.id_types()
+print(f"{len(all_types)} ID types in total")
+[t for t in all_types if t["entity_type"] == "small_molecule"][:8]
 
 # %% [markdown]
 # ## Translate one identifier
@@ -36,7 +41,7 @@ ids = ["TP53", "MYC", "CDK2", "BRCA1"]
 utils.map_names(ids, "genesymbol", "uniprot")
 
 # %%
-df = utils.translation_df(ids, "genesymbol", "uniprot")
+df = utils.translation_df("genesymbol", "uniprot", identifiers=ids)
 df
 
 # %% [markdown]
@@ -49,7 +54,7 @@ utils.map_name("HMDB0000094", "hmdb", "chebi")  # citrate
 
 # %%
 metabolites = ["HMDB0000094", "HMDB0000254", "HMDB0000190"]  # citrate, succinate, lactate
-utils.translation_df(metabolites, "hmdb", "chebi")
+utils.translation_df("hmdb", "chebi", identifiers=metabolites)
 
 # %% [markdown]
 # ## Taxonomy resolution
