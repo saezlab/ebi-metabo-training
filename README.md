@@ -85,6 +85,11 @@ BSD 3-Clause — see `LICENSE`.
 - **COSMOS (latest preprint)** — *Modeling causal signal propagation
   in multi-omic factor space with COSMOS.* bioRxiv 2024.
   doi:[10.1101/2024.07.15.603538](https://doi.org/10.1101/2024.07.15.603538)
+- **MetalinksDB** — Farr E, Dimitrov D, Schmidt C, Türei D, Lobentanzer S,
+  Dugourd A, Saez-Rodriguez J. *MetalinksDB: a flexible and
+  contextualizable resource of metabolite-protein interactions.*
+  Briefings in Bioinformatics, 25(4):bbae347, 2024.
+  doi:[10.1093/bib/bbae347](https://doi.org/10.1093/bib/bbae347)
 
 ## Acknowledgements
 
