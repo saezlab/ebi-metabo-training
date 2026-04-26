@@ -7,8 +7,8 @@ license = "BSD-3-Clause"
 requires-python = ">=3.12,<3.13"
 
 dependencies = [
-    "omnipath-client[pandas,polars] @ git+https://github.com/saezlab/omnipath-client@main",
-    "omnipath-metabo @ git+https://github.com/saezlab/omnipath-metabo@main",
+    "omnipath-client[pandas,polars]",
+    "omnipath-metabo",
     "pandas>=2.2",
     "polars>=1.0",
     "pyarrow>=15.0",
@@ -24,9 +24,22 @@ dependencies = [
 graph = ["annnet"]
 dev = ["pytest>=8", "ruff>=0.6"]
 
+[tool.uv.sources]
+# The saezlab Python packages are pre-alpha; the published release tags do
+# not yet correspond to working installs. We pin every saezlab dep — direct
+# AND transitive — to its default branch so uv resolves a coherent set of
+# HEADs. Switch to specific tags or commits once the packages stabilise.
+omnipath-client = { git = "https://github.com/saezlab/omnipath-client.git", branch = "master" }
+omnipath-metabo = { git = "https://github.com/saezlab/omnipath-metabo.git", branch = "main" }
+omnipath-utils  = { git = "https://github.com/saezlab/omnipath-utils.git",  branch = "main" }
+dlmachine       = { git = "https://github.com/saezlab/download-manager.git", branch = "main" }
+pypath-omnipath = { git = "https://github.com/saezlab/pypath.git",          branch = "master" }
+pkg-infra       = { git = "https://github.com/saezlab/pkg-infra.git",       branch = "main" }
+annnet          = { git = "https://github.com/saezlab/annnet.git",          branch = "main" }
+
 [tool.uv]
-# When stable tags appear, switch the git deps above from @main to @vX.Y.Z.
-# `uv.lock` will pin to a specific commit either way.
+# `uv.lock` records the resolved commits; commit the lock file to make
+# installs reproducible across machines.
 
 [tool.jupytext.formats]
 "../scripts/R/" = "R:percent"
