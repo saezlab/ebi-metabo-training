@@ -9,6 +9,7 @@ Participants don't need anything in here.
 |---------------------|-----------------------------------------------------------------------------|
 | `build_rlib.sh`     | On `beauty`: install all R deps into a fresh user library, then tar it.     |
 | `upload_rlib.sh`    | rsync the resulting tarball to `static.omnipathdb.org/metabo2026/`.         |
+| `install-nix.sh`    | NixOS-friendly install path (`env/install.R` redirects here on NixOS).      |
 | `vm_smoke_test.sh`  | Reproduce the X11 font bug in a clean Docker container, verify the fix.    |
 | `colab_smoke_test.ipynb` | A bare notebook to run on Colab to confirm both halves work end-to-end. |
 
