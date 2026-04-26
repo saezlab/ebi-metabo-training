@@ -31,8 +31,8 @@ dma_results <- dma(
     ),
     pval = "lmFit",
     padj = "fdr",
-    save_plot = "svg",
-    save_table = "csv",
+    save_plot = NULL,
+    save_table = NULL,
     print_plot = FALSE,
     path = mp_results_dir("02_dma")
 )
@@ -40,20 +40,16 @@ dma_results <- dma(
 names(dma_results)
 
 # %% [markdown]
-# Each list element is a contrast. Results live as new assays on the SE
-# along with a tidy results table.
+# `dma_results` is a list with `$ShapiroTest`, `$BartlettTest`, `$dma`,
+# and `$VolcanoPlot`. The actual per-contrast rectangular results live in
+# `$dma`, keyed by contrast name.
+
+# %%
+names(dma_results$dma)
 
 # %%
 contrast <- "786-M1A_vs_HK2"
-res_se <- dma_results[[contrast]]$SE
-res_se
-
-# %%
-SummarizedExperiment::assayNames(res_se)
-
-# %%
-# The rectangular results table also comes back ready to plot.
-dma_table <- dma_results[[contrast]]$dma
+dma_table <- dma_results$dma[[contrast]]
 head(dma_table)
 
 # %% [markdown]
@@ -71,8 +67,8 @@ viz_volcano(
     select_label = c("citrate", "succinate", "lactate", "alpha-ketoglutarate"),
     plot_name = contrast,
     subtitle = "Differential metabolites: 786-M1A vs HK2",
-    save_plot = "svg",
-    print_plot = TRUE,
+    save_plot = NULL,
+    print_plot = FALSE,
     path = mp_results_dir("02_dma")
 )
 
@@ -93,8 +89,8 @@ viz_heatmap(
     data = clean_se[top_metabolites, ],
     metadata_info = c(color = "Conditions"),
     plot_name = "Top 30 differential metabolites",
-    save_plot = "svg",
-    print_plot = TRUE,
+    save_plot = NULL,
+    print_plot = FALSE,
     path = mp_results_dir("02_dma")
 )
 
@@ -108,8 +104,8 @@ viz_pca(
     data = clean_se,
     metadata_info = c(color = "Conditions"),
     plot_name = "PCA of cleaned intracellular metabolomics",
-    save_plot = "svg",
-    print_plot = TRUE,
+    save_plot = NULL,
+    print_plot = FALSE,
     path = mp_results_dir("02_dma")
 )
 

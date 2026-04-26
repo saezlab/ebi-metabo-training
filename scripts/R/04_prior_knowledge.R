@@ -2,15 +2,21 @@
 # # 4. Metabolomics prior knowledge from OmnipathR
 #
 # OmnipathR has gained substantial metabolomics coverage in the last year.
-# The four resources we'll use:
+# The three resources we'll use:
 #
 # - **MetalinksDB** — metabolite ↔ protein interactions (Saez group)
-# - **HMDB** — Human Metabolome Database
-# - **RaMP-DB** — pathway / class / chemical-property mappings
-# - **RECON3D** — genome-scale metabolic model (now with HMDB IDs from
+# - **RaMP-DB** — pathway / class / chemical-property mappings; covers
+#   most of the ID-translation needs that HMDB also serves
+# - **RECON3D** — genome-scale metabolic model (with HMDB IDs from
 #   the Virtual Metabolic Human export)
 #
 # Each is fetched on demand and cached locally.
+#
+# We deliberately do **not** demonstrate `hmdb_table()` in the live
+# session — the HMDB XML dump is huge (multi-GB) and HMDB.ca enforces
+# bot-blocking that returns HTTP 403 from cloud-VM IP ranges. RaMP
+# already provides cross-resource ID maps for the same data, so for
+# this tutorial it's a strict improvement.
 
 # %%
 source(file.path(here::here(), "scripts/R/_utils.R"))
@@ -25,11 +31,16 @@ library(OmnipathR)
 metalinksdb_tables()
 
 # %%
-# The 'lr' table is the ligand-receptor edge list — small molecule on
-# one side, protein receptor on the other.
-ml_lr <- metalinksdb_table("lr")
+# The 'edges' table holds every metabolite-protein edge; each row carries
+# a `type` ("lr" for ligand-receptor, etc.) and a confidence score.
+ml_edges <- metalinksdb_table("edges")
+dim(ml_edges)
+head(ml_edges)
+
+# %%
+# Filter to ligand-receptor edges only.
+ml_lr <- subset(ml_edges, type == "lr")
 dim(ml_lr)
-head(ml_lr)
 
 # %% [markdown]
 # MetaProViz wraps MetalinksDB into a ready-to-enrich pathway-style table
@@ -38,24 +49,6 @@ head(ml_lr)
 # %%
 ml_pk <- metsigdb_metalinks()
 head(ml_pk)
-
-# %% [markdown]
-# ## HMDB
-#
-# HMDB has dozens of fields per metabolite. List them, then pull a
-# focused slice.
-
-# %%
-hmdb_metabolite_fields() |> head(20)
-
-# %%
-# Just IDs and names — fast.
-hmdb_ids <- hmdb_table(
-    dataset = "metabolites",
-    fields = c("accession", "name", "chemical_formula", "monisotopic_molecular_weight")
-)
-nrow(hmdb_ids)
-head(hmdb_ids)
 
 # %% [markdown]
 # ## RaMP-DB
@@ -97,9 +90,13 @@ pk_overlap <- compare_pk(
         metalinks = as.data.frame(ml_pk),
         kegg      = as.data.frame(metsigdb_kegg())
     ),
+    metadata_info = list(
+        metalinks = c("metabolite"),
+        kegg      = c("MetaboliteID")
+    ),
     plot_name = "Metabolite coverage: MetalinksDB vs KEGG",
-    save_plot = "svg",
-    print_plot = TRUE,
+    save_plot = NULL,
+    print_plot = FALSE,
     path = mp_results_dir("04_prior_knowledge")
 )
 
@@ -113,13 +110,18 @@ pk_overlap <- compare_pk(
 
 # %%
 dma_results <- readRDS(file.path(mp_results_dir(), "dma_results.rds"))
-dma_table <- dma_results[["786-M1A_vs_HK2"]]$dma
+dma_table <- dma_results$dma[["786-M1A_vs_HK2"]]
 
-# Build a feature metadata table with HMDB IDs (script 03 showed how;
-# in real use this comes from the dataset's annotation file).
-feature_meta <- dma_table |>
-    dplyr::select(Metabolite) |>
-    equivalent_id(metadata_info = c(InputID = "Metabolite"), from = "name")
+# Build a feature metadata table with HMDB IDs. The dma table only has
+# metabolite trivial names; in a real workflow you'd ship an HMDB column
+# with the dataset. For demonstration we fake one with a small known
+# mapping and show the diagnostic.
+feature_meta <- data.frame(
+    Metabolite = c("citrate", "succinate", "lactate", "alpha-ketoglutarate",
+                   "glutamine", "glutamate", "alanine"),
+    HMDB = c("HMDB0000094", "HMDB0000254", "HMDB0000190", "HMDB0000208",
+            "HMDB0000641", "HMDB0000148", "HMDB0000161")
+)
 
 # %%
 match_diag <- checkmatch_pk_to_data(

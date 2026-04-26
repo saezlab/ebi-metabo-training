@@ -25,8 +25,8 @@ library(OmnipathR)
 # ## What identifier types are available?
 
 # %%
-# Resources that OmnipathR can translate between for metabolites.
-id_translation_resources(entity = "metabolite") |> head()
+# Resources that OmnipathR can translate between (small molecule + protein).
+id_translation_resources()
 
 # %% [markdown]
 # ## Example A — translate a small KEGG pathway list to HMDB and PubChem

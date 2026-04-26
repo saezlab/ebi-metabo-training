@@ -62,22 +62,23 @@ processed <- processing(
     data = intracell_raw_se,
     metadata_info = c(
         Conditions = "Conditions",
-        Biological_Replicates = "Biological_Replicate"
+        Biological_Replicates = "Biological_Replicates"
     ),
     featurefilt = "Modified",
     cutoff_featurefilt = 0.8,
     tic = TRUE,
     mvi = TRUE,
-    save_plot = "svg",
-    save_table = "csv",
+    save_plot = NULL,
+    save_table = NULL,
     print_plot = FALSE,
     path = mp_results_dir("01_processing")
 )
 
 # %%
-# The processed SE: same shape, with imputed/normalised values and outliers
-# tagged in colData.
-processed_se <- processed$SE
+# `processing()` returns a named list with $SE / $DF / $Plot, each itself
+# a list keyed by stage (`data_Rawdata`, `Preprocessing_output`, …).
+# We want the final stage.
+processed_se <- processed$SE$Preprocessing_output
 processed_se
 
 # %%

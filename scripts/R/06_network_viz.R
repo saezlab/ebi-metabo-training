@@ -1,56 +1,46 @@
 # %% [markdown]
 # # 6. Network visualization with `viz_graph()`
 #
-# `viz_graph()` (new in MetaProViz 3.99.40) renders a node-link graph
-# from a long-format edge table. We use it to draw a small ligand-receptor
-# subnetwork around the metabolites that drove the top KEGG cluster from
-# script 05.
+# `viz_graph()` is MetaProViz's term-cluster network viewer, designed to
+# work directly with the output of `cluster_pk()`. It expects a similarity
+# matrix of pathway terms plus a cluster assignment — exactly what
+# `cluster_pk()` produced in script 05.
 
 # %%
 source(file.path(here::here(), "scripts/R/_utils.R"))
 library(MetaProViz)
 library(OmnipathR)
-library(dplyr)
-
-# %% [markdown]
-# ## Pick a focus set of metabolites
 
 # %%
-dma_results <- readRDS(file.path(mp_results_dir(), "dma_results.rds"))
-
-top_metabolites <- dma_results[["786-M1A_vs_HK2"]]$dma |>
-    dplyr::arrange(p.adj) |>
-    dplyr::slice_head(n = 15) |>
-    dplyr::pull(Metabolite)
-
-top_metabolites
+ora_bundle <- readRDS(file.path(mp_results_dir(), "ora_results.rds"))
+clustered_kegg <- ora_bundle$clustered
+names(clustered_kegg)
 
 # %% [markdown]
-# ## Slice MetalinksDB to those metabolites
-#
-# We pull metabolite ↔ receptor / transporter edges, then filter to our
-# top-15 set.
+# `cluster_pk()` already builds the term-similarity network internally
+# and stores the rendered ggraph in `$graph_plot`. We can either show it
+# directly or re-call `viz_graph()` on the underlying `similarity_matrix`
+# and `clusters` to retune visual parameters.
 
 # %%
-ml_lr <- metalinksdb_table("lr")
+cat("similarity matrix dim:", dim(clustered_kegg$similarity_matrix), "\n")
+cat("clusters: ", length(clustered_kegg$clusters), "term assignments\n")
 
-ml_subset <- ml_lr |>
-    dplyr::filter(metabolite_name %in% top_metabolites) |>
-    dplyr::distinct(metabolite_name, gene_symbol, type)
-
-dim(ml_subset)
-head(ml_subset)
+# %%
+# Reuse the cluster_pk-built plot.
+clustered_kegg$graph_plot
 
 # %% [markdown]
-# ## Draw the graph
+# Or re-render with a custom threshold:
 
 # %%
 viz_graph(
-    data = ml_subset,
-    metadata_info = c(source = "metabolite_name", target = "gene_symbol", type = "type"),
-    plot_name = "Top differential metabolites — MetalinksDB neighbours",
-    save_plot = "svg",
-    print_plot = TRUE,
+    similarity_matrix = clustered_kegg$similarity_matrix,
+    clusters = clustered_kegg$clusters,
+    plot_threshold = 0.3,
+    plot_name = "KEGG pathway clusters (threshold=0.3)",
+    save_plot = NULL,
+    print_plot = FALSE,
     path = mp_results_dir("06_network")
 )
 
@@ -60,12 +50,8 @@ viz_graph(
 # OmnipathR also ships builders that compose the full COSMOS prior
 # knowledge network — multi-layer (transporters, receptors, allosteric,
 # enzyme–metabolite, signalling, regulation). We won't run COSMOS itself,
-# but here's the entry point — it's the same data the Python segment
-# explores from a different angle.
-
-# %%
-# Just print the function, don't run — full PKN is heavy.
-?cosmos_pkn
+# but the entry point is `cosmos_pkn()` in OmnipathR. The same data
+# surfaces in the Python segment via the `omnipath-client` library.
 
 # %% [markdown]
 # **End of R section.**

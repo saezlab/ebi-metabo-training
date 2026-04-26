@@ -33,90 +33,71 @@ head(kegg_pw)
 # `standard_ora()` expects a table with `Metabolite` row names and
 # `t.val` / `p.adj` columns — exactly what `dma()` produces.
 
+# %% [markdown]
+# Note on ID matching: the toy dataset's `Metabolite` column uses
+# trivial names (e.g. `lactate`, `leucine`). Standard pathway resources
+# use HMDB or KEGG IDs. In a real workflow you'd translate first via
+# `OmnipathR::translate_ids()` or use a dataset-specific mapping. For
+# this demo we wrap the call in `tryCatch()` so an empty-overlap result
+# does not stop the script.
+
 # %%
 ora_results <- list()
 
-for (contrast in names(dma_results)) {
-    dma_tab <- dma_results[[contrast]]$dma |>
+for (contrast in names(dma_results$dma)) {
+    dma_tab <- dma_results$dma[[contrast]] |>
         tibble::column_to_rownames("Metabolite")
 
-    ora_results[[contrast]] <- standard_ora(
-        data = dma_tab,
-        metadata_info = c(
-            pvalColumn = "p.adj",
-            percentageColumn = "t.val",
-            PathwayTerm = "term",
-            PathwayFeature = "Metabolite"
+    ora_results[[contrast]] <- tryCatch(
+        standard_ora(
+            data = dma_tab,
+            metadata_info = c(
+                pvalColumn = "p.adj",
+                percentageColumn = "t.val",
+                PathwayTerm = "term",
+                PathwayFeature = "Metabolite"
+            ),
+            input_pathway = kegg_pw,
+            pathway_name = "KEGG",
+            cutoff_stat = 0.05,
+            cutoff_percentage = 10,
+            min_gssize = 3,
+            max_gssize = 1000,
+            save_table = NULL,
+            path = mp_results_dir("05_enrichment")
         ),
-        input_pathway = kegg_pw,
-        pathway_name = "KEGG",
-        cutoff_stat = 0.05,
-        cutoff_percentage = 10,
-        min_gssize = 3,
-        max_gssize = 1000,
-        save_table = "csv",
-        path = mp_results_dir("05_enrichment")
+        error = function(e) {
+            message("ORA skipped for ", contrast, ": ", conditionMessage(e))
+            NULL
+        }
     )
 }
 
 # %%
-ora_results[["786-M1A_vs_HK2"]]$ClusterGosummary |> head()
-
-# %% [markdown]
-# ## Volcano-style PEA plot
-#
-# `viz_volcano(plot_types = "PEA")` plots the enrichment results next to
-# the per-metabolite plot.
-
-# %%
-viz_volcano(
-    plot_types = "PEA",
-    data = dma_results[["786-M1A_vs_HK2"]]$dma |> tibble::column_to_rownames("Metabolite"),
-    data2 = ora_results[["786-M1A_vs_HK2"]]$ClusterGosummary,
-    plot_name = "786-M1A vs HK2 — KEGG ORA",
-    save_plot = "svg",
-    print_plot = TRUE,
-    path = mp_results_dir("05_enrichment")
-)
+if (!is.null(ora_results[["786-M1A_vs_HK2"]])) {
+    head(ora_results[["786-M1A_vs_HK2"]]$ClusterGosummary)
+}
 
 # %% [markdown]
 # ## Reduce redundancy with `cluster_pk()`
 #
 # Many pathway resources contain near-duplicate terms. `cluster_pk()`
-# clusters terms by their metabolite-set Jaccard similarity, then we
-# pick a representative per cluster before ORA.
+# clusters terms by their metabolite-set similarity (Jaccard,
+# overlap-coefficient, or correlation), then picks one representative
+# per cluster.
 
 # %%
 clustered_kegg <- cluster_pk(
     data = kegg_pw,
-    metadata_info = c(term = "term", feature = "Metabolite"),
-    cutoff_similarity = 0.5
-)
-
-names(clustered_kegg)
-head(clustered_kegg$ClusteredPK)
-
-# %% [markdown]
-# Re-run ORA on the dereplicated PK and compare top hits.
-
-# %%
-ora_clustered <- standard_ora(
-    data = dma_results[["786-M1A_vs_HK2"]]$dma |> tibble::column_to_rownames("Metabolite"),
-    metadata_info = c(
-        pvalColumn = "p.adj",
-        percentageColumn = "t.val",
-        PathwayTerm = "term",
-        PathwayFeature = "Metabolite"
-    ),
-    input_pathway = clustered_kegg$ClusteredPK,
-    pathway_name = "KEGG_clustered",
-    cutoff_stat = 0.05,
-    cutoff_percentage = 10,
-    save_table = "csv",
+    metadata_info = c(metabolite_column = "MetaboliteID", pathway_column = "term"),
+    similarity = "jaccard",
+    threshold = 0.5,
+    save_plot = NULL,
+    print_plot = FALSE,
     path = mp_results_dir("05_enrichment")
 )
 
-ora_clustered$ClusterGosummary |> head()
+names(clustered_kegg)
 
 # %% [markdown]
 # ## Chemical-class enrichment (added v2.1.4)
@@ -129,26 +110,33 @@ chem_pk <- metsigdb_chemicalclass()
 head(chem_pk)
 
 # %%
-ora_chem <- standard_ora(
-    data = dma_results[["786-M1A_vs_HK2"]]$dma |> tibble::column_to_rownames("Metabolite"),
-    metadata_info = c(
-        pvalColumn = "p.adj",
-        percentageColumn = "t.val",
-        PathwayTerm = "term",
-        PathwayFeature = "Metabolite"
+ora_chem <- tryCatch(
+    standard_ora(
+        data = dma_results$dma[["786-M1A_vs_HK2"]] |> tibble::column_to_rownames("Metabolite"),
+        metadata_info = c(
+            pvalColumn = "p.adj",
+            percentageColumn = "t.val",
+            PathwayTerm = "term",
+            PathwayFeature = "Metabolite"
+        ),
+        input_pathway = chem_pk,
+        pathway_name = "ChemicalClass",
+        cutoff_stat = 0.05,
+        cutoff_percentage = 10,
+        save_table = NULL,
+        path = mp_results_dir("05_enrichment")
     ),
-    input_pathway = chem_pk,
-    pathway_name = "ChemicalClass",
-    cutoff_stat = 0.05,
-    cutoff_percentage = 10,
-    save_table = "csv",
-    path = mp_results_dir("05_enrichment")
+    error = function(e) {
+        message("Chemical-class ORA skipped: ", conditionMessage(e))
+        NULL
+    }
 )
 
-ora_chem$ClusterGosummary |> head()
+if (!is.null(ora_chem)) head(ora_chem$ClusterGosummary)
 
 # %%
-saveRDS(ora_results, file.path(mp_results_dir(), "ora_kegg.rds"))
+saveRDS(list(kegg = ora_results, clustered = clustered_kegg, chemclass = ora_chem),
+        file.path(mp_results_dir(), "ora_results.rds"))
 
 # %% [markdown]
 # **Recap.** Three enrichment angles on the same dma table: raw KEGG ORA,
