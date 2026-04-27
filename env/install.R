@@ -139,13 +139,32 @@ cat("Installing:\n  ", paste(pkgs, collapse = "\n  "), "\n", sep = "")
 
 pak::pkg_install(pkgs, lib = user_lib, upgrade = FALSE, ask = FALSE)
 
-# Register the IRkernel for Jupyter so notebooks/metabo_R.ipynb can run.
-if (requireNamespace("IRkernel", quietly = TRUE)) {
-    try(IRkernel::installspec(name = "ir-metabo2026",
-                              displayname = "R (metabo2026)",
-                              user = TRUE),
-        silent = TRUE)
+# Sanity check: if IRkernel didn't install, the R notebook won't work.
+# pak emits a non-fatal warning when the system has no `libzmq3-dev`
+# (needed by pbdZMQ → IRkernel), so a missing IRkernel here means
+# either libzmq3-dev is absent or the install was interrupted.
+if (!requireNamespace("IRkernel", quietly = TRUE)) {
+    msg <- paste0(
+        "\n",
+        strrep("=", 64), "\n",
+        "WARNING: IRkernel did not install.\n",
+        "Most likely the system package `libzmq3-dev` is missing.\n",
+        "Ask your sysadmin to run, or run yourself if you have sudo:\n\n",
+        "    sudo apt-get install -y libzmq3-dev\n\n",
+        "Then re-run this script. The R notebook (notebooks/metabo_R.ipynb)\n",
+        "will not work without IRkernel.\n",
+        strrep("=", 64), "\n"
+    )
+    message(msg)
 }
+
+# We do NOT call IRkernel::installspec() here. On a fresh VM, jupyter
+# isn't on PATH yet (it lives inside the uv venv we create in the
+# Python install step). The kernel registration is a separate step,
+# run from inside the venv via `make register-r-kernel`.
 
 cat("\nInstall complete.\n")
 cat("Verify with:  Rscript -e 'library(MetaProViz); library(OmnipathR)'\n")
+cat("Next steps:\n")
+cat("  1. cd env && uv sync                 # set up Python\n")
+cat("  2. make register-r-kernel            # register R for Jupyter\n")

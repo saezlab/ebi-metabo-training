@@ -15,13 +15,44 @@ Rscript env/install.R
 
 `env/install.R` configures the right repo URLs and the
 `HTTPUserAgent` header that tells PPM to serve binaries on Linux,
-then runs `pak::pkg_install()`. Expected time: **3–5 min**.
+then runs `pak::pkg_install()`. Expected time: **3–5 min on a modern
+workstation, ~15 min on the EBI training-room VMs**.
 
 When it finishes you should be able to:
 
 ```bash
 Rscript -e 'library(MetaProViz); library(OmnipathR); cat("ok\n")'
 ```
+
+## System prerequisites (one apt line, sudo required)
+
+`IRkernel` (the Jupyter R kernel) depends on `pbdZMQ`, which links
+against the system library `libzmq3-dev`. PPM ships R binaries that
+dynamically link to it, so it must be present at the OS level. On
+Ubuntu / Debian:
+
+```bash
+sudo apt-get install -y libzmq3-dev
+```
+
+On a fresh Ubuntu 24.04 VM this is the only system package
+`env/install.R` needs that isn't pre-installed. EBI organisers should
+run it once on the master VM before cloning. If it's missing,
+`env/install.R` finishes with a prominent warning that IRkernel didn't
+install — re-run after adding the system package.
+
+## Registering the R kernel for Jupyter
+
+After `env/install.R` AND `cd env && uv sync` have both completed,
+register the R kernel so `jupyter lab` can find it:
+
+```bash
+make register-r-kernel
+```
+
+This must run *after* the Python install, because the venv's `jupyter`
+needs to be on `PATH` for `IRkernel::installspec()` to find the right
+location. `make setup` chains all three steps in the correct order.
 
 ## Platform notes
 

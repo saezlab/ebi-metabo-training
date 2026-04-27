@@ -1,27 +1,49 @@
 # 00 — Setup overview
 
-Pick the path that matches your environment. The hands-on works on:
+The default path on Ubuntu / Debian / RHEL / macOS / Windows is three
+commands from the repo root:
 
-- **Ubuntu LTS VM** provided by EBI (training-room machines). Follow
-  [`01_setup_r.md`](01_setup_r.md) and [`02_setup_python.md`](02_setup_python.md).
-- **Your own laptop** (Linux / macOS / Windows). Same files; pay attention
-  to the platform-specific notes near the bottom of each.
-- **Google Colab** (last-resort fallback). Follow [`03_setup_colab.md`](03_setup_colab.md).
+```bash
+git clone https://github.com/saezlab/ebi-metabo-training.git
+cd ebi-metabo-training
+make setup
+```
 
-## Two environments
+`make setup` chains:
 
-The training has separate R and Python halves; install both before the
-session starts.
+1. `Rscript env/install.R` — installs OmnipathR + MetaProViz and friends from PPM binaries via `pak`. ~3–5 min on a workstation, ~15 min on the EBI training-room VMs.
+2. `cd env && uv sync` — Python deps including `omnipath-client`, `omnipath-metabo`, JupyterLab. ~10 s on Ubuntu.
+3. `make register-r-kernel` — registers the R kernel with the venv's Jupyter so the R notebook works.
 
-| Half | Tool         | One-liner                                  |
-|------|--------------|--------------------------------------------|
-| R    | `pak` + PPM  | `Rscript env/install.R`                    |
-| Py   | `uv`         | `cd env && uv sync`                        |
+It also works as three separate steps:
 
-If R install is stuck on a "compiling from source" message, you are not
-getting binaries. Stop and read [`01_setup_r.md`](01_setup_r.md) — the
-likely fix is one missing config line, the fallback is a pre-built RLIB
-tarball.
+```bash
+Rscript env/install.R
+( cd env && uv sync )
+make register-r-kernel
+```
+
+## System prerequisite (Ubuntu / Debian, one-time)
+
+The R Jupyter kernel needs `libzmq3-dev` on the system. EBI organisers
+should run this once on the master VM before cloning:
+
+```bash
+sudo apt-get install -y libzmq3-dev
+```
+
+If `env/install.R` finishes with a "WARNING: IRkernel did not install"
+banner, that's the missing system package. See [`01_setup_r.md`](01_setup_r.md).
+
+## Per-platform notes
+
+- **EBI Ubuntu LTS VMs**: as above. The default R 4.3.3 is fine — our
+  patched MetaProViz pin keeps the Polychrome dep at < 1.5.4 (the
+  R-4.4-only version is excluded).
+- **Your own laptop** (Linux / macOS / Windows): same `make setup`. See
+  [`01_setup_r.md`](01_setup_r.md) for platform-specific install notes.
+- **NixOS**: `env/install.R` redirects you to `bash trainer/install-nix.sh`.
+- **Google Colab** (last-resort fallback): see [`03_setup_colab.md`](03_setup_colab.md).
 
 ## Verifying
 
