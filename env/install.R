@@ -124,9 +124,14 @@ if (!requireNamespace("pak", quietly = TRUE)) {
 # OmnipathR and MetaProViz pulled from GitHub: until the May 2026 Bioc release
 # the Bioc devel mirror lags GitHub by a couple of versions, and MetaProViz in
 # particular has not yet hit Bioc release.
+#
+# R.matlab is in OmnipathR's Suggests (via `recon3d_*`); pak only pulls
+# hard deps by default. List it here so script 04 (prior_knowledge) can
+# load Recon3D without a missing-namespace error.
 pkgs <- c(
     "saezlab/OmnipathR",
     "saezlab/MetaProViz",
+    "R.matlab",
     "IRkernel"
 )
 
