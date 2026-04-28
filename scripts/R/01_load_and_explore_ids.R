@@ -16,14 +16,15 @@
 
 # %%
 source(file.path(here::here(), "scripts/R/_utils.R"))
+
 library(MetaProViz)
-library(OmnipathR)
 
 # %% [markdown]
 # ## Load the data
 #Check which type of metabolite IDs are available and what other information
 #where provided by the authors.
 # %%
+
 data(tissue_meta)
 head(tissue_meta)
 
