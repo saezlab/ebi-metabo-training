@@ -1,9 +1,10 @@
 # %% [markdown]
-# # 4. Metabolomics prior knowledge from OmnipathR
+# # 5. Metabolomics prior knowledge from MetaProViz and OmnipathR
 #
 # OmnipathR has gained substantial metabolomics coverage in the last year.
 # The three resources we'll use:
 #
+# - **MetSigDB** — a curated collection of metabolite-sets for enrichment analysis
 # - **MetalinksDB** — metabolite ↔ protein interactions (Saez group)
 # - **RaMP-DB** — pathway / class / chemical-property mappings; covers
 #   most of the ID-translation needs that HMDB also serves
