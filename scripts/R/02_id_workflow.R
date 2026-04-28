@@ -529,10 +529,9 @@ delta_df <- rbind(
 
 # %%
 saveRDS(id_count_df, file.path(mp_results_dir(), "id_count_df.rds"))
-saveRDS( delta_df, file.path(mp_results_dir(), "delta_df"))
-saveRDS(MetaboliteIDs_traverse, file.path(mp_results_dir(), "MetaboliteIDs_expanded"))
+saveRDS( delta_df, file.path(mp_results_dir(), "delta_df.rds"))
+saveRDS(MetaboliteIDs_traverse, file.path(mp_results_dir(), "MetaboliteIDs_expanded.rds"))
 
 # %% [markdown]
-# **Recap.** `dma()` produced three contrasts (`*_vs_HK2`). Volcano +
-# heatmap + PCA give us a quick read on biology before we move to
-# pathway-level interpretation in scripts 03-05.
+# **Recap.** MetaProViz offers a workflow to compile the ID feature space prior to
+# enrichment analysis and mapping to PK.
