@@ -8,6 +8,9 @@ suppressPackageStartupMessages({
     library(dplyr)
     library(tibble)
     library(stringr)
+    library(magrittr)
+    library(rlang)
+    library(tidyr)
 })
 
 # Repository root regardless of where the script was sourced from.
@@ -154,4 +157,20 @@ calculate_none_delta <- function(df, from_category, to_category) {
     )
 }
 
+# Helper for the ID separator
 
+# Global separator convention for all metabolite ID columns
+id_separator <- ", "
+
+# Normalize mixed separators (",", ";") to one global format
+normalize_id_cell <- function(x, out_sep = id_separator) {
+    ifelse(
+        is.na(x),
+        NA_character_,
+        purrr::map_chr(stringr::str_split(x, "[;,]"), ~ {
+            vals <- stringr::str_trim(.x)
+            vals <- vals[vals != ""]
+            if (length(vals) == 0) NA_character_ else paste(vals, collapse = out_sep)
+        })
+    )
+}
