@@ -145,7 +145,7 @@ SelectedIDs <- ccRCC_to_KEGGPathways_data_summary %>%
     )
 
 # %% [markdown]
-#We identified that in some cases in our data, there are two MetaboliteIDs with e.g.
+# We identified that in some cases in our data, there are two MetaboliteIDs with e.g.
 # stereochemical differences but they map to multiple pathways. Therefore, we are
 # going to remember them here and later remove them from the Pathway PK
 #
@@ -172,6 +172,21 @@ Tissue_MetaData_Extended_cleaned <-
 
 
 saveRDS(Tissue_MetaData_Extended_cleaned, file.path(mp_results_dir(), "MetaboliteIDs_expanded_cleanedKEGG.rds"))
+
+# %% [markdown]
+# ## 3. Enrichment Analysis
+# %%
+
+
+
+
+# %% [markdown]
+# `cluster_pk()` already builds the term-similarity network internally
+# and stores the rendered ggraph in `$graph_plot`. We can either show it
+# directly or re-call `viz_graph()` on the underlying `similarity_matrix`
+# and `clusters` to retune visual parameters.
+
+# %%
 
 
 
