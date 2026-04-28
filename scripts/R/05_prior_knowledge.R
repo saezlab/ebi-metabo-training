@@ -18,6 +18,14 @@
 # already provides cross-resource ID maps for the same data, so for
 # this tutorial it's a strict improvement.
 
+# Two complementary tools:
+#
+# - **OmnipathR** wraps RaMP-DB and its companion mapping infrastructure;
+#   `translate_ids()` is the general cross-resource translator.
+# - **MetaProViz** wraps OmnipathR with a tidier, table-in / table-out API
+#   tuned for metabolomics workflows: `translate_id()` (singular),
+#   `equivalent_id()`, and `count_id()`.
+
 # %%
 source(file.path(here::here(), "scripts/R/_utils.R"))
 library(MetaProViz)
