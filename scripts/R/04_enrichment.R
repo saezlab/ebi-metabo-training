@@ -1,31 +1,55 @@
 # %% [markdown]
 # # 5. Enrichment analysis
 #
-# Two complementary approaches:
-#
 # - **`standard_ora()`** — over-representation analysis: are the
-#   significantly altered metabolites enriched in any pathway? Fisher's
+#   significantly altered metabolites enriched in any metabolite-set Fisher's
 #   exact test, the same engine `clusterProfiler` uses.
-# - **`cluster_pk()`** (new in v3.99.40) — first cluster pathway terms
-#   that share metabolites, then run ORA on representative clusters.
-#   Cuts redundancy in the output (e.g. you get one "TCA cycle"
-#   cluster instead of three near-duplicate KEGG/Reactome/Hallmark
-#   variants).
 
 # %%
+
 source(file.path(here::here(), "scripts/R/_utils.R"))
 library(MetaProViz)
 library(OmnipathR)
 library(dplyr)
 
-dma_results <- readRDS(file.path(mp_results_dir(), "dma_results.rds"))
+# %% [markdown]
+# ## 1. Load the DMA results
+# For the same data for which we have prepared the metabolite ID feature space,
+# we will load now the differential metabolite results.
+# If you need to create differential results first you can use MetaProViz functionality:
+# https://saezlab.github.io/MetaProViz/reference/dma.html
+
+# %%
+
+data(tissue_dma) # compares tumour versus normal
 
 # %% [markdown]
-# ## Build a pathway resource — KEGG via MetaProViz
+# ## 2. Load the feature metadata
+# Prepared in 02_id_workflow and 03_id_to_pk
+
+# %%
+Tissue_MetaData_Extended_cleaned <- readRDS(file.path(mp_results_dir(), "Tissue_MetaData_Extended_cleaned.rds"))
+
+# %% [markdown]
+# ## 3. Load KEGG pathway-metabolite sets
+# We load the cleaned version via MetaProViz (part of MetSigDB)
 
 # %%
 kegg_pw <- metsigdb_kegg()
 head(kegg_pw)
+
+# As we found some problematic cases we remove those from the PK
+KEGG_Pathways_clean <-
+    KEGG_Pathways %>%
+    filter(
+        !(MetaboliteID == "C01087" & term == "Metabolic pathways"),  # Remove (R)-2-Hydroxyglutarate (C01087) from KEGG pathway "Metabolic Pathways"
+        !(MetaboliteID == "C00668" & term %in% c(    # C00092, C00668: remove C00668 from Pathways which contain both of them
+            "Metabolic pathways",
+            "Biosynthesis of secondary metabolites"
+        ))
+    )
+
+
 
 # %% [markdown]
 # ## Standard ORA per contrast
@@ -42,41 +66,11 @@ head(kegg_pw)
 # does not stop the script.
 
 # %%
-ora_results <- list()
 
-for (contrast in names(dma_results$dma)) {
-    dma_tab <- dma_results$dma[[contrast]] |>
-        tibble::column_to_rownames("Metabolite")
+set.seed(100)
 
-    ora_results[[contrast]] <- tryCatch(
-        standard_ora(
-            data = dma_tab,
-            metadata_info = c(
-                pvalColumn = "p.adj",
-                percentageColumn = "t.val",
-                PathwayTerm = "term",
-                PathwayFeature = "Metabolite"
-            ),
-            input_pathway = kegg_pw,
-            pathway_name = "KEGG",
-            cutoff_stat = 0.05,
-            cutoff_percentage = 10,
-            min_gssize = 3,
-            max_gssize = 1000,
-            save_table = NULL,
-            path = mp_results_dir("05_enrichment")
-        ),
-        error = function(e) {
-            message("ORA skipped for ", contrast, ": ", conditionMessage(e))
-            NULL
-        }
-    )
-}
 
-# %%
-if (!is.null(ora_results[["786-M1A_vs_HK2"]])) {
-    head(ora_results[["786-M1A_vs_HK2"]]$ClusterGosummary)
-}
+
 
 # %% [markdown]
 # ## Reduce redundancy with `cluster_pk()`
@@ -99,46 +93,9 @@ clustered_kegg <- cluster_pk(
 
 names(clustered_kegg)
 
-# %% [markdown]
-# ## Chemical-class enrichment (added v2.1.4)
-#
-# The same ORA machinery runs against chemical classes — useful when
-# pathway annotation is sparse but compound-class info is rich.
 
-# %%
-chem_pk <- metsigdb_chemicalclass()
-head(chem_pk)
-
-# %%
-ora_chem <- tryCatch(
-    standard_ora(
-        data = dma_results$dma[["786-M1A_vs_HK2"]] |> tibble::column_to_rownames("Metabolite"),
-        metadata_info = c(
-            pvalColumn = "p.adj",
-            percentageColumn = "t.val",
-            PathwayTerm = "term",
-            PathwayFeature = "Metabolite"
-        ),
-        input_pathway = chem_pk,
-        pathway_name = "ChemicalClass",
-        cutoff_stat = 0.05,
-        cutoff_percentage = 10,
-        save_table = NULL,
-        path = mp_results_dir("05_enrichment")
-    ),
-    error = function(e) {
-        message("Chemical-class ORA skipped: ", conditionMessage(e))
-        NULL
-    }
-)
-
-if (!is.null(ora_chem)) head(ora_chem$ClusterGosummary)
-
-# %%
-saveRDS(list(kegg = ora_results, clustered = clustered_kegg, chemclass = ora_chem),
-        file.path(mp_results_dir(), "ora_results.rds"))
 
 # %% [markdown]
 # **Recap.** Three enrichment angles on the same dma table: raw KEGG ORA,
-# de-duplicated KEGG ORA via `cluster_pk()`, and chemical-class ORA. The
-# next script visualises one of these as a small network.
+# de-duplicated KEGG ORA via `cluster_pk()`. Then we
+# visualised one of these as a small network.
