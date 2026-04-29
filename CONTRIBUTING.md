@@ -54,6 +54,20 @@ If you ran a notebook to test, **don't commit the executed `.ipynb`**.
 Run `make notebooks` again or strip outputs with
 `jupyter nbconvert --clear-output --inplace notebooks/*.ipynb`.
 
+## Importing `_utils` from a `uv run python` shell
+
+`scripts/python/_utils.py` carries the small shared helpers used by every
+numbered Python script. To make `import _utils` work from any
+`uv run python` interactive session — not just when running a script
+through `uv run python ../scripts/python/01_…py` — `make setup-python`
+drops a `metabo2026-scripts.pth` file into the venv's `site-packages`
+that points at `scripts/python/`. CPython auto-loads any `.pth` file
+on interpreter start, so `_utils` is importable transparently.
+
+If you ever blow away `env/.venv/` and re-run `uv sync` directly (rather
+than `make setup-python`), the `.pth` file won't exist; just rerun
+`make setup-python` to recreate it.
+
 ## Working in Jupyter (optional paired mode)
 
 If you'd rather edit in JupyterLab directly and have the script auto-sync,

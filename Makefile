@@ -1,5 +1,10 @@
 .PHONY: help setup setup-r setup-python register-r-kernel notebooks check-r check-py clean-results
 
+# uv is commonly installed under ~/.local/bin (curl installer) which
+# isn't on $PATH for non-login shells. Prepend it so the Makefile is
+# resilient to that.
+export PATH := $(HOME)/.local/bin:$(PATH)
+
 help:
 	@echo "Targets:"
 	@echo "  setup              R + Python environment setup + R-kernel registration"
@@ -19,6 +24,9 @@ setup-r:
 
 setup-python:
 	cd env && uv sync
+	@cd env && SP=$$(.venv/bin/python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])') && \
+		echo "$$PWD/../scripts/python" > "$$SP/metabo2026-scripts.pth" && \
+		echo "Wrote $$SP/metabo2026-scripts.pth -> $$PWD/../scripts/python"
 
 # Run IRkernel::installspec from inside the uv venv so `jupyter` is on
 # PATH and the kernel spec lands where the venv's jupyter looks for it.
