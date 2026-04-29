@@ -43,3 +43,7 @@ dist/
 *.tar.gz
 *.tar.zst
 !env/*.lock
+
+# Per-process logs from saezlab Python packages
+**/logs/
+*.log
