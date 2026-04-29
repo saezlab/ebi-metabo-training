@@ -82,9 +82,6 @@ saveRDS(MetaboliteIDs, file.path(mp_results_dir(), "MetaboliteIDs_clean_idsepara
 
 # %%
 
-# Load cleaned feature metadata with unified ID separator
-MetaboliteIDs <- readRDS(file.path(mp_results_dir(), "MetaboliteIDs_clean_idseparator.rds"))
-
 # compare id space
 ccRCC_CompareIDs <- compare_pk(data = list(Biocft = MetaboliteIDs |>
                                                dplyr::rename("Class"="SUPER_PATHWAY")),
@@ -173,7 +170,12 @@ MetaboliteIDs_compatibility_check <- seed_id_compatibility_check(
 MetaboliteIDs_pair_compatibility <- MetaboliteIDs_compatibility_check$ID_pair_compatibility
 MetaboliteIDs_data_with_compatibility <- MetaboliteIDs_compatibility_check$data_with_compatibility
 
-# 1. Let's retrieve the fully compatible features
+# %% [markdown]
+# ### i) Let's retrieve the fully compatible features
+# For those features no issues were found and hence everything is correct.
+
+# %%
+
 fully_compatible_metabolites <- MetaboliteIDs_data_with_compatibility[MetaboliteIDs_data_with_compatibility$all_seed_ids_compatible == TRUE, "Metabolite"]
 
 # retrieve the id_pairs for these fully_compatibly features
@@ -191,7 +193,11 @@ cat("Distinct features in fully_compatible_id_pair_rows:",
     length(unique(fully_compatible_id_pair_rows$Metabolite)),
     "(checks out)\n")
 
-# 2. Get lost metabolites
+# %% [markdown]
+# ### ii) Get lost metabolites
+# keep all direct and secondary matches and discard no_match
+
+# %%
 MetaboliteIDs_pair_compatibility_filtered <- MetaboliteIDs_pair_compatibility %>%
     filter(
         (all_seed_ids_compatible == TRUE) |
@@ -206,6 +212,9 @@ lost_Metabolites_after_filtering <- list(
     )
 )
 
+lost_id_pair_rows <- MetaboliteIDs_pair_compatibility[ MetaboliteIDs_pair_compatibility$Metabolite
+                                                       %in% lost_Metabolites_after_filtering[[1]]  , ]
+
 cat("Distinct metabolites before compatibility filtering:",
     length(unique(MetaboliteIDs_pair_compatibility$Metabolite)),
     "\n")
@@ -213,14 +222,47 @@ cat("Distinct metabolites after compatibility filtering:",
     length(unique(MetaboliteIDs_pair_compatibility_filtered$Metabolite)),
     "\n")
 
-# Lets explore one case: N-acetyltryptophan
+# Lets explore some cases:
+# Example 1: N-acetyltryptophan
 Trypt <- MetaboliteIDs_data_with_compatibility%>%
     filter(Metabolite== "N-acetyltryptophan")
-Trypt
+Trypt # Kegg C03137 is D- and Pubchem 700653 is L form.
 
-# Kegg C03137 is D- and Pubchem 700653 is L form.
+# as we do not have the time for a manual review in this session you will need to
+# trust our review and just filter out the below metabolites:
 
-# 3. Get the permutation_df for the partially_compatible features
+lost_id_pair_rows_corrected <- lost_id_pair_rows %>%
+    mutate(
+        KEGG = case_when(
+            # drop_id is a helper in utils to Remove one ID from a delimiter-separated cell;
+            # return NA if empty.
+            Metabolite == "androsterone sulfate" ~ drop_id(KEGG, "C00523"),
+            Metabolite == "N-acetylthreonine" ~ drop_id(KEGG, "C01118"),
+            Metabolite == "catechol sulfate" ~ drop_id(KEGG, "C00090"),
+            TRUE ~ KEGG
+        ),
+        HMDB = case_when(
+            Metabolite == "fructose-6-phosphate" ~ drop_id(HMDB, "HMDB0000124"),
+            Metabolite == "galactose" ~ drop_id(HMDB, "HMDB0000143"),
+            TRUE ~ HMDB
+        ),
+        PUBCHEM = case_when(
+            Metabolite == "mannose" ~ drop_id(PUBCHEM, "161658"),
+            Metabolite == "tyrosylalanine" ~ "7020632",
+            TRUE ~ PUBCHEM
+        ),
+        manual_correction = TRUE,
+        correction_tbl = "manual_fix_for_lost_id_pair_rows"
+    )
+
+# %% [markdown]
+# ### iii) Get the permutation_df for the partially_compatible features
+# keep all direct and secondary matches and discard no_match
+# We will remove 41 partially incompatible cases (= some IDs are connected in
+# the network whilst others are not
+
+# %%
+
 partially_compatible_metabolites <-
     MetaboliteIDs_data_with_compatibility %>%
     filter(
@@ -251,22 +293,16 @@ partially_compatible_id_pair_rows %<>%
     )
 
 # %% [markdown]
-# here we:
-# removed 41 partially incompatible cases (= some IDs are connected in the network
-# whilst others are not)
-# completely removed 33 cases with no match between IDs (=fully incompatible)
-# --> manual review required. Here we only look at one example, but ignore
-# those as we do not
-# have the time for a manual review in this session and will just strictly filter
-# those out, potentially loosing 33 features.
+#
 
-# %% [markdown]
+# %%
 
 # now lets summarize them again, we completely ignore the incompatible features
 combined_tables <-
     rbind(
         partially_compatible_id_pair_rows,
-        fully_compatible_id_pair_rows
+        fully_compatible_id_pair_rows,
+        lost_id_pair_rows_corrected
     )
 
 # join back together based on "original_row_id", summarizing the IDs per type
@@ -332,6 +368,8 @@ MetaboliteIDs_cleaned <- combined_tables %>%
         correction_tbl
     )
 
+head(MetaboliteIDs_cleaned)
+
 # lets check number of IDs and add to our summary table
 ccRCC_CompareIDs_cleaned <- MetaProViz::compare_pk(data = list(Biocft = MetaboliteIDs_cleaned |> dplyr::rename("Class"="SUPER_PATHWAY")),
                                                    name_col = "Metabolite",
@@ -362,6 +400,7 @@ id_count_df <- append_id_counts(id_count_df, Plot2_PubChem, "PUBCHEM_Cleaned")
 
 ## Calculate delta rows
 delta_df <- calculate_id_deltas(id_count_df, "Original", "Cleaned")
+delta_df
 
 # %% [markdown]
 # ## 2. Translate Cas to metabolite ID
@@ -420,9 +459,9 @@ MetaboliteIDs_Translated <- MetaboliteIDs_cleaned %>%
 # Now we can repeat the `count_id` and `compare_pk` plot after every change to
 # the number of metabolite IDs
 ccRCC_CompareIDs_Translated <- MetaProViz::compare_pk(data = list(Biocft = MetaboliteIDs_Translated |> dplyr::rename("Class"="SUPER_PATHWAY")),
-                                                   name_col = "Metabolite",
-                                                   metadata_info = list(Biocft = c("KEGG", "HMDB", "PUBCHEM")),
-                                                   plot_name = "Overlap of ID types in ccRCC data")
+                                                      name_col = "Metabolite",
+                                                      metadata_info = list(Biocft = c("KEGG", "HMDB", "PUBCHEM")),
+                                                      plot_name = "Overlap of ID types in ccRCC data")
 
 
 Plot3_HMDB <- count_id(MetaboliteIDs_Translated,
@@ -497,7 +536,6 @@ cat("NOT fully compatible features (PUBCHEM/KEGG/HMDB) WITHOUT a 'manual_curatio
     "\n")
 
 # Incorporate the newly added features into a new df "MetaboliteIDs_traverse"
-
 MetaboliteIDs_traverse <-
     traverse_ID_ExpandedDF %>%
     mutate(
@@ -531,9 +569,9 @@ MetaboliteIDs_traverse <-
 # Now we can repeat the `count_id` and `compare_pk` plot after every change to
 # the number of metabolite IDs
 ccRCC_CompareIDs_Traverse <- MetaProViz::compare_pk(data = list(Biocft = MetaboliteIDs_traverse |> dplyr::rename("Class"="SUPER_PATHWAY")),
-                                                      name_col = "Metabolite",
-                                                      metadata_info = list(Biocft = c("KEGG", "HMDB", "PUBCHEM")),
-                                                      plot_name = "Overlap of ID types in ccRCC data")
+                                                    name_col = "Metabolite",
+                                                    metadata_info = list(Biocft = c("KEGG", "HMDB", "PUBCHEM")),
+                                                    plot_name = "Overlap of ID types in ccRCC data")
 
 
 Plot4_HMDB <- count_id(MetaboliteIDs_traverse,
@@ -552,8 +590,8 @@ Plot4_PubChem <- count_id(MetaboliteIDs_traverse,
 
 # 3. Chebi:
 Plot4_CHEBI <- count_id(MetaboliteIDs_traverse,
-                          delimiter = ", ",
-                          "CHEBI")
+                        delimiter = ", ",
+                        "CHEBI")
 
 # extend counting dataframe with traverse_id results
 # traverse
@@ -572,17 +610,48 @@ delta_df <- rbind(
 
 # %% [markdown]
 # ## 4. Equivalent IDs
-#
+# If you do not know if you expect L- or D- of your aminoacids or R/S sugar,
+# which both are not distinguishable by LC-MS, you can add equivalent IDs.
+# As we have human samples and do not want the D-As form, we will skip this step.
+# You can see details here:
+# https://saezlab.github.io/MetaProViz/reference/equivalent_id.html
 
 # %%
-
-
-
-
 
 saveRDS(id_count_df, file.path(mp_results_dir(), "id_count_df.rds"))
 saveRDS( delta_df, file.path(mp_results_dir(), "delta_df.rds"))
 saveRDS(MetaboliteIDs_traverse, file.path(mp_results_dir(), "MetaboliteIDs_expanded.rds"))
+
+
+# %% [markdown]
+# ## 5. Explore how our ID space changed:
+
+# %%
+
+#Compare plots:
+ccRCC_CompareIDs
+ccRCC_CompareIDs_Traverse
+
+
+#Check result tables:
+id_count_df
+
+delta_df
+
+plot_df <- id_count_df %>%
+    mutate(
+        db = sub("_.*$", "", row_name),
+        stage = sub("^[^_]+_", "", row_name),
+        db = factor(db, levels = c("HMDB", "KEGG", "PUBCHEM", "CHEBI")),
+        stage = factor(stage, levels = c("Original", "Cleaned", "Translated", "Traverse"))
+    ) %>%
+    arrange(db, stage)
+
+ggplot(plot_df, aes(x = db, y = Total_IDs, fill = stage)) +
+    geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+    labs(x = NULL, y = "Total IDs", fill = NULL) +
+    theme_minimal(base_size = 12)
+
 
 # %% [markdown]
 # **Recap.** MetaProViz offers a workflow to compile the ID feature space prior to
