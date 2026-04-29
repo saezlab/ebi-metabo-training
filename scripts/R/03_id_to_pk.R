@@ -173,22 +173,6 @@ Tissue_MetaData_Extended_cleaned <-
 
 saveRDS(Tissue_MetaData_Extended_cleaned, file.path(mp_results_dir(), "MetaboliteIDs_expanded_cleanedKEGG.rds"))
 
-# %% [markdown]
-# ## 3. Enrichment Analysis
-# %%
-
-
-
-
-# %% [markdown]
-# `cluster_pk()` already builds the term-similarity network internally
-# and stores the rendered ggraph in `$graph_plot`. We can either show it
-# directly or re-call `viz_graph()` on the underlying `similarity_matrix`
-# and `clusters` to retune visual parameters.
-
-# %%
-
-
 
 # %% [markdown]
 # **Recap.** We created final table that will be used as input for the
