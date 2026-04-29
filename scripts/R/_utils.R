@@ -54,8 +54,11 @@ mp_peek <- function(x, n_rows = 6L, n_cols = 8L) {
     head(x, n_rows)
 }
 
+
+# %% [markdown]
 # Establish helper functions to create some overview summaries that we can use to
 # discuss the individual steps we will be doing within 02_id_workflow.R:
+# %%
 
 # 1. Helper: extract one summary row from count_id() output
 extract_id_counts <- function(count_obj, row_name) {
@@ -157,7 +160,10 @@ calculate_none_delta <- function(df, from_category, to_category) {
     )
 }
 
+# %% [markdown]
 # Helper for the ID separator
+
+# %%
 
 # Global separator convention for all metabolite ID columns
 id_separator <- ", "
