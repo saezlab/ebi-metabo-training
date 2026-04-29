@@ -11,6 +11,8 @@ suppressPackageStartupMessages({
     library(magrittr)
     library(rlang)
     library(tidyr)
+    library(cowplot)
+    library(ggplot2)
 })
 
 # Repository root regardless of where the script was sourced from.
@@ -179,4 +181,14 @@ normalize_id_cell <- function(x, out_sep = id_separator) {
             if (length(vals) == 0) NA_character_ else paste(vals, collapse = out_sep)
         })
     )
+}
+
+# Remove one ID from a delimiter-separated cell; return NA if empty.
+drop_id <- function(x, id, sep = ", ") {
+    purrr::map_chr(x, function(v) {
+        if (is.na(v) || trimws(v) == "") return(NA_character_)
+        vals <- stringr::str_split(v, "\\s*,\\s*")[[1]]
+        vals <- vals[vals != "" & vals != id]
+        if (length(vals) == 0) NA_character_ else paste(unique(vals), collapse = sep)
+    })
 }
