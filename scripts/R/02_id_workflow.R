@@ -1,5 +1,5 @@
 # %% [markdown]
-# # 2. MetaProViz Metabolite ID workflow
+# # 1. MetaProViz Metabolite ID workflow
 # This is important to improving the connection between prior knowledge and
 # metabolomics features.
 # Many databases that collect metabolite information, such as the Human
@@ -19,6 +19,59 @@
 source(file.path(here::here(), "scripts/R/_utils.R"))
 
 library(MetaProViz)
+
+
+# %% [markdown]
+# ## 0. Load the data
+#
+# We work with publicly available metabolomic profiling on 138 matched clear cell
+# renal cell carcinoma (ccRCC)/normal tissue pairsdownloaded from
+# https://www.cell.com/cancer-cell/comments/S1535-6108(15)00468-7. Here we are
+#interested in processing and working with the metababolite feature space and
+#will only load the feature metadata for exploration.
+#
+# FYI: Since v3.99.10 (Oct 2025) MetaProViz also uses `SummarizedExperiment` (SE) as
+# its canonical container — the same object Bioconductor's omics packages
+# expect. Each row is a metabolite; each column is a sample. Sample
+# annotations live in `colData(se)`, feature annotations in `rowData(se)`,
+# the actual measurements in `assays(se)`. You can also load all data in se format
+# using `data(tissue_norm_se)`
+
+#Check which type of metabolite IDs are available and what other information
+#where provided by the authors.
+# %%
+
+data(tissue_meta)
+
+head(tissue_meta)
+
+# %% [markdown]
+# ## Data wrangling
+# It is important to inspect the separator of the metabolite ids and unify them,
+# as it is common that are not unified. In this case, we have some entries with ";"
+# and some with "," as separator. We will unify them to "," and save the cleaned
+# object for later use using a helper from utils.
+# %%
+
+MetaboliteIDs <- tissue_meta %>%
+    dplyr::filter(!stringr::str_detect(Metabolite, "^X\\s*-\\s*\\d+$"))%>%# only keep entries with trivial names
+    dplyr::mutate(
+        SUPER_PATHWAY = dplyr::coalesce(SUPER_PATHWAY, "None"),
+        SUB_PATHWAY   = dplyr::coalesce(SUB_PATHWAY, "None"),
+        CAS = normalize_id_cell(CAS),
+        HMDB = normalize_id_cell(HMDB),
+        KEGG = normalize_id_cell(KEGG),
+        PUBCHEM = normalize_id_cell(PUBCHEM)
+    ) %>%
+    mutate(across(where(is.character), ~ gsub(";", ",", .x)))
+
+# save .rds file
+saveRDS(MetaboliteIDs, file.path(mp_results_dir(), "MetaboliteIDs_clean_idseparator.rds"))
+
+# %% [markdown]
+# **Recap.** We loaded the feature metadata of the ccRCC dataset published by
+# Hakimi et al. in 2018 and inspected the metabolite IDs available and ensured
+# the metabolite ID separator is unified and saved the cleaned object.
 
 # %% [markdown]
 # ## 1. Feature space quality control
@@ -527,7 +580,6 @@ delta_df <- rbind(
 
 
 
-# %%
 saveRDS(id_count_df, file.path(mp_results_dir(), "id_count_df.rds"))
 saveRDS( delta_df, file.path(mp_results_dir(), "delta_df.rds"))
 saveRDS(MetaboliteIDs_traverse, file.path(mp_results_dir(), "MetaboliteIDs_expanded.rds"))
