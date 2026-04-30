@@ -37,10 +37,11 @@ notebooks:
 	cd env && uv run python build_notebook.py \
 		--kernel ir-metabo2026 \
 		--output ../notebooks/metabo_R.ipynb \
-		--main ../scripts/R/01_prior_knowledge.R \
-		       ../scripts/R/02_id_workflow.R \
-		       ../scripts/R/03_id_to_pk.R \
-		       ../scripts/R/04_enrichment.R \
+		--main ../scripts/R/01_omnipathr_metabolomics.R \
+		       ../scripts/R/02_prior_knowledge.R \
+		       ../scripts/R/03_id_workflow.R \
+		       ../scripts/R/04_id_to_pk.R \
+		       ../scripts/R/05_enrichment.R \
 		--supplementary ../scripts/R/77_processing_data_cells.R \
 		                ../scripts/R/88_differential_analysis_cells.R
 	cd env && uv run python build_notebook.py \
