@@ -9,6 +9,7 @@ Description: Not a real package; a fake DESCRIPTION used as a manifest by
 Imports:
     OmnipathR (>= 3.99.0),
     MetaProViz (>= 3.99.40),
+    R.matlab,
     SummarizedExperiment,
     dplyr,
     tidyr,
@@ -16,7 +17,10 @@ Imports:
     purrr,
     readr,
     stringr,
+    magrittr,
+    rlang,
     ggplot2,
+    cowplot,
     ggraph,
     igraph,
     here,

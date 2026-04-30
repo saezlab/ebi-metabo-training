@@ -121,23 +121,31 @@ if (!requireNamespace("pak", quietly = TRUE)) {
 }
 
 # ---- Install ----
-# OmnipathR and MetaProViz pulled from GitHub: until the May 2026 Bioc release
-# the Bioc devel mirror lags GitHub by a couple of versions, and MetaProViz in
-# particular has not yet hit Bioc release.
-#
-# R.matlab is in OmnipathR's Suggests (via `recon3d_*`); pak only pulls
-# hard deps by default. List it here so script 04 (prior_knowledge) can
-# load Recon3D without a missing-namespace error.
-pkgs <- c(
-    "saezlab/OmnipathR",
-    "saezlab/MetaProViz",
-    "R.matlab",
-    "IRkernel"
+# Dependencies are declared in env/DESCRIPTION and resolved via pak's
+# local_install_dev_deps. The Remotes: line in DESCRIPTION pins
+# OmnipathR and MetaProViz to GitHub: until the May 2026 Bioc release
+# the Bioc devel mirror lags GitHub by a couple of versions, and
+# MetaProViz in particular has not yet hit Bioc release.
+
+# Resolve env/DESCRIPTION robustly regardless of where the script is
+# launched from (Makefile uses `Rscript env/install.R` from the repo
+# root; users sometimes `cd env && Rscript install.R`).
+script_args <- commandArgs(trailingOnly = FALSE)
+script_path <- sub("^--file=", "", script_args[grep("^--file=", script_args)])
+desc_dir <- if (length(script_path)) {
+    normalizePath(dirname(script_path), mustWork = TRUE)
+} else {
+    getwd()
+}
+
+cat("Reading manifest: ", file.path(desc_dir, "DESCRIPTION"), "\n", sep = "")
+
+pak::local_install_dev_deps(
+    desc_dir,
+    lib = user_lib,
+    upgrade = FALSE,
+    ask = FALSE,
 )
-
-cat("Installing:\n  ", paste(pkgs, collapse = "\n  "), "\n", sep = "")
-
-pak::pkg_install(pkgs, lib = user_lib, upgrade = FALSE, ask = FALSE)
 
 # Sanity check: if IRkernel didn't install, the R notebook won't work.
 # pak emits a non-fatal warning when the system has no `libzmq3-dev`
