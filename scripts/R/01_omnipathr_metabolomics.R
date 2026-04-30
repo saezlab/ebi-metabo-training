@@ -3,8 +3,8 @@
 #
 # Over the last year OmnipathR gained native accessors for almost every
 # small-molecule resource we routinely reach for in a metabolomics
-# workflow: **HMDB**, **RaMP-DB**, **MetalinksDB**, **RECON3D**, the
-# **Chalmers Sysbio GEMs** (incl. Human-GEM), **STITCH**, and
+# workflow: **HMDB**, **RaMP-DB**, **MetalinksDB**, the **Chalmers
+# Sysbio GEMs** (incl. Human-GEM), **STITCH**, and
 # Reactome's **ChEBI**-keyed pathway export. Plus a generic
 # `translate_ids()` that uses any of these as a backend.
 #
@@ -72,29 +72,13 @@ ml_lr <- subset(ml_edges, type == "lr")
 dim(ml_lr)
 
 # %% [markdown]
-# ## RECON3D
-#
-# A genome-scale metabolic model — useful when you want reactions,
-# compartments, or enzyme-metabolite relationships rather than pathway
-# membership. The `extra_hmdb` flag pulls HMDB cross-IDs from the
-# Virtual Metabolic Human export and joins them onto the metabolite
-# table.
-
-# %%
-recon3d_metabolites() |> head()
-
-# %%
-recon3d_reactions() |> head()
-
-# %%
-recon3d_compartments()
-
-# %% [markdown]
 # ## Chalmers Sysbio GEMs (Human-GEM and friends)
 #
 # A family of genome-scale metabolic models maintained by the Chalmers
-# Sysbio group. Same shape as RECON3D (metabolites + reactions +
-# genes) but with a different curation pedigree and richer ID coverage.
+# Sysbio group — useful when you want reactions, compartments, or
+# enzyme-metabolite relationships rather than pathway membership.
+# Three tables (metabolites, reactions, genes) plus a built-in
+# ID-mapping table.
 
 # %%
 chalmers_gem_metabolites() |> head()

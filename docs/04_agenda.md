@@ -18,7 +18,7 @@ Slides — no code. Topics:
 |----------|---------|------------------------------------------------------------------------------------------|
 | 00:45    | 5       | Verify setup: `library(MetaProViz)` / `import omnipath_client`                           |
 | **R portion**                                                                                                |
-| 00:50    | 15      | **§1 OmnipathR metabolomics resources & translation** — RaMP, MetalinksDB, RECON3D, Chalmers GEM, Reactome+ChEBI; `translate_ids(..., ramp = TRUE)` + `ambiguity()` (script 01) |
+| 00:50    | 15      | **§1 OmnipathR metabolomics resources & translation** — RaMP, MetalinksDB, Chalmers GEM, Reactome+ChEBI; `translate_ids(..., ramp = TRUE)` + `ambiguity()` (script 01) |
 | 01:05    | 15      | **§2 MetaProViz prior-knowledge sets** — MetSigDB pathway / chemical-class / cancer / gene-metabolite sets; `compare_pk()` (script 02) |
 | 01:20    | 10      | **§3 MetaProViz ID workflow** — `count_id()`, `translate_id()`, `equivalent_id()` on the ccRCC tissue dataset (script 03) |
 | 01:30    | 10      | **§4 Integrate features with prior knowledge** — mapping-ambiguity diagnostics before enrichment (script 04) |

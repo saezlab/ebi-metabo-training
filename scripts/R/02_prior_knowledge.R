@@ -150,5 +150,5 @@ pk_comp_res <- compare_pk(data = list(Hallmarks = as.data.frame(hallmarks_pathwa
 # API tuned for metabolomics workflows: it ships ready-to-enrich
 # pathway-, gene-, chemical-class-, and metalinks-derived metabolite-sets
 # under one umbrella, plus `compare_pk()` to inspect overlap. The
-# underlying OmnipathR resources (MetalinksDB, RaMP, RECON3D, …) are
+# underlying OmnipathR resources (MetalinksDB, RaMP, Chalmers GEM, …) are
 # demonstrated directly in script 01.
